@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, ArrowUpRight, ShieldCheck, X } from 'lucide-react';
-import { SUGGESTED_PROMPTS, INITIAL_CHAT, getAuraResponse } from '../lib/aiCompanion';
+import { SUGGESTED_PROMPTS, INITIAL_CHAT } from '../lib/aiCompanion';
+import { getAuraAIResponse, isAuraAIEnabled } from '../lib/geminiService';
 import { ChatMessage } from '../types/database.types';
 
 interface AskAuraProps {
@@ -18,7 +19,7 @@ export const AskAura: React.FC<AskAuraProps> = ({ isDrawer = false, onClose }) =
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleSendQuery = (query: string) => {
+  const handleSendQuery = async (query: string) => {
     if (!query.trim()) return;
 
     const userMsg: ChatMessage = {
@@ -28,12 +29,13 @@ export const AskAura: React.FC<AskAuraProps> = ({ isDrawer = false, onClose }) =
       time: 'Now',
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const nextHistory = [...messages, userMsg];
+    setMessages(nextHistory);
     setInputText('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const reply = getAuraResponse(query);
+    try {
+      const reply = await getAuraAIResponse(nextHistory);
       const aiMsg: ChatMessage = {
         id: `aura-${Date.now()}`,
         sender: 'aura',
@@ -41,8 +43,9 @@ export const AskAura: React.FC<AskAuraProps> = ({ isDrawer = false, onClose }) =
         time: 'Now',
       };
       setMessages((prev) => [...prev, aiMsg]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
   return (
@@ -79,7 +82,7 @@ export const AskAura: React.FC<AskAuraProps> = ({ isDrawer = false, onClose }) =
           <div>
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>Aura is listening</div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
-              PERSONAL PRACTICE GUIDE
+              {isAuraAIEnabled ? 'AI-POWERED PRACTICE GUIDE' : 'PERSONAL PRACTICE GUIDE'}
             </div>
           </div>
         </div>
