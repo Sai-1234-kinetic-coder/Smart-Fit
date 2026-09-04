@@ -1,0 +1,108 @@
+:root {
+  --font-serif: 'Fraunces', serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
+  /* Editorial Warm Luxury Wellness Palette */
+  --bg-canvas: #FAF8F5;
+  --bg-card: #FFFFFF;
+  --bg-card-subtle: #F5F1EA;
+  --bg-surface: #EFEAE2;
+  --bg-tint-sage: #EBF2EE;
+  --bg-tint-warm: #FBF0EB;
+
+  --text-primary: #1C1917;
+  --text-secondary: #78716C;
+  --text-muted: #A8A29E;
+
+  --accent-terracotta: #D75A30;
+  --accent-terracotta-hover: #BF4D26;
+  --accent-terracotta-soft: rgba(215, 90, 48, 0.12);
+
+  --accent-sage: #4E7A66;
+  --accent-sage-soft: rgba(78, 122, 102, 0.12);
+
+  --accent-gold: #E5A83B;
+  --accent-gold-soft: rgba(229, 168, 59, 0.14);
+
+  --border-light: rgba(0, 0, 0, 0.07);
+  --border-card: #EFECE6;
+
+  --shadow-subtle: 0 4px 20px -2px rgba(28, 25, 23, 0.04);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.05);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-full: 9999px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .serif-font {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input, textarea {
+  font-family: var(--font-sans);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes breatheCircle {
+  0%, 100% { transform: scale(0.92); opacity: 0.75; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDD8D0;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C8C2B8;
+}
