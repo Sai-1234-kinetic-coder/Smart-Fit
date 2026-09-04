@@ -3,7 +3,10 @@ import { getAuraResponse as getFallbackResponse } from './aiCompanion';
 
 // Read from Vite environment (loaded from .env locally or GitHub Secrets during deployment)
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const MODEL = 'gemini-flash-latest';
+// Flash-Lite: Google's fastest/cheapest tier, no "thinking" step before
+// replying — the right fit for a short, warm chat companion like Aura.
+// This alias auto-tracks the newest Flash-Lite release.
+const MODEL = 'gemini-flash-lite-latest';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 export const isAuraAIEnabled = Boolean(GEMINI_API_KEY);

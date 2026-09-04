@@ -17,7 +17,14 @@ export const Login: React.FC<LoginProps> = ({ onContinueAsGuest }) => {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setError(err?.message || 'Sign-in failed. Please try again.');
+      if (err?.code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+        setError(
+          `Domain "${host}" is not authorized in Firebase. Add "${host}" under Firebase Console -> Authentication -> Settings -> Authorized domains, or explore as guest below.`
+        );
+      } else {
+        setError(err?.message || 'Sign-in failed. Please try again.');
+      }
     } finally {
       setIsSigningIn(false);
     }
@@ -72,13 +79,24 @@ export const Login: React.FC<LoginProps> = ({ onContinueAsGuest }) => {
             maxWidth: 380,
           }}
         >
-          Firebase isn't configured yet. Add your project keys to a <code>.env</code> file
+          Firebase is not configured yet. Add your project keys to a <code>.env</code> file
           (see <code>.env.example</code>) to enable sign-in.
         </div>
       )}
 
       {error && (
-        <div style={{ fontSize: 13, color: 'var(--accent-terracotta)', marginBottom: 16 }}>
+        <div
+          style={{
+            fontSize: 13,
+            color: 'var(--accent-terracotta)',
+            backgroundColor: 'var(--accent-terracotta-soft)',
+            padding: '10px 16px',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: 16,
+            maxWidth: 420,
+            lineHeight: 1.5,
+          }}
+        >
           {error}
         </div>
       )}
@@ -102,7 +120,7 @@ export const Login: React.FC<LoginProps> = ({ onContinueAsGuest }) => {
             border: 'none',
           }}
         >
-          {isSigningIn ? 'Signing in…' : 'Continue with Google'}
+          {isSigningIn ? 'Signing in...' : 'Continue with Google'}
         </button>
 
         {onContinueAsGuest && (
