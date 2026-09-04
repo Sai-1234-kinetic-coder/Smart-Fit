@@ -1,7 +1,15 @@
-import { TodayData, MovementLogItem } from '../types/database.types';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  onSnapshot,
+  Unsubscribe,
+} from 'firebase/firestore';
+import { TodayData } from '../types/database.types';
+import { db, isOnlineMode } from './firebase';
 
-const INITIAL_TODAY_DATA: TodayData = {
-  dateString: 'THURSDAY, 14 MARCH 2024',
+export const INITIAL_TODAY_DATA: TodayData = {
+  dateString: new Date().toDateString().toUpperCase(),
   auraScore: 842,
   auraScoreMax: 1000,
   auraScoreDelta: '+2.8 from last week',
@@ -20,7 +28,7 @@ const INITIAL_TODAY_DATA: TodayData = {
   profile: {
     id: 'user_alex',
     name: 'Alex Morgan',
-    greetingName: 'Mouli',
+    greetingName: 'Friend',
     avatarText: 'AM',
     memberSince: 'March 2024',
     level: 7,
@@ -96,37 +104,91 @@ const INITIAL_TODAY_DATA: TodayData = {
   ],
 };
 
-const STORAGE_KEY = 'aurafit_today_data_v1';
+const LOCAL_STORAGE_KEY = 'aurafit_today_data_v1';
 
-export function getTodayData(): TodayData {
+function readLocal(): TodayData {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
   } catch (e) {
     console.warn('Storage read error:', e);
   }
   return INITIAL_TODAY_DATA;
 }
 
-export function saveTodayData(data: TodayData): void {
+function writeLocal(data: TodayData): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
     console.warn('Storage write error:', e);
   }
 }
 
-export function togglePracticeComplete(id: string): TodayData {
-  const current = getTodayData();
-  const updatedPractices = current.todayPractices.map((p) =>
-    p.id === id ? { ...p, completed: !p.completed } : p
+/**
+ * Subscribes to a user's Today data in real time.
+ * - Online mode: live Firestore listener, seeds the doc on first sign-in.
+ * - Offline/local mode (no uid or Firebase not configured): reads localStorage once.
+ * Returns an unsubscribe function.
+ */
+export function subscribeToTodayData(
+  uid: string | null,
+  seedProfile: { name?: string | null; avatarText?: string } | undefined,
+  callback: (data: TodayData) => void
+): Unsubscribe {
+  if (!isOnlineMode || !db || !uid) {
+    callback(readLocal());
+    return () => {};
+  }
+
+  const ref = doc(db, 'users', uid);
+
+  // Seed the document the first time this user signs in.
+  getDoc(ref).then((snap) => {
+    if (!snap.exists()) {
+      const seeded: TodayData = {
+        ...INITIAL_TODAY_DATA,
+        profile: {
+          ...INITIAL_TODAY_DATA.profile,
+          id: uid,
+          name: seedProfile?.name || INITIAL_TODAY_DATA.profile.name,
+          greetingName: (seedProfile?.name || 'Friend').split(' ')[0],
+          avatarText: seedProfile?.avatarText || INITIAL_TODAY_DATA.profile.avatarText,
+        },
+      };
+      setDoc(ref, seeded).catch((e) => console.warn('Seed write error:', e));
+    }
+  });
+
+  return onSnapshot(
+    ref,
+    (snap) => {
+      if (snap.exists()) callback(snap.data() as TodayData);
+    },
+    (err) => console.warn('Today data listener error:', err)
   );
-  const updated: TodayData = {
-    ...current,
-    todayPractices: updatedPractices,
-  };
-  saveTodayData(updated);
+}
+
+export async function saveTodayData(uid: string | null, data: TodayData): Promise<void> {
+  if (!isOnlineMode || !db || !uid) {
+    writeLocal(data);
+    return;
+  }
+  try {
+    await setDoc(doc(db, 'users', uid), data, { merge: true });
+  } catch (e) {
+    console.warn('Firestore write error:', e);
+  }
+}
+
+export async function togglePracticeComplete(
+  uid: string | null,
+  current: TodayData,
+  practiceId: string
+): Promise<TodayData> {
+  const updatedPractices = current.todayPractices.map((p) =>
+    p.id === practiceId ? { ...p, completed: !p.completed } : p
+  );
+  const updated: TodayData = { ...current, todayPractices: updatedPractices };
+  await saveTodayData(uid, updated);
   return updated;
 }

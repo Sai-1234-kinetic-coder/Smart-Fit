@@ -112,7 +112,17 @@ export const Trainer: React.FC = () => {
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
                 PREVAILING RANGE
               </div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--accent-sage)', marginTop: 2 }}>
+              <div style={{
+                fontSize: 13,
+                fontWeight: 500,
+                marginTop: 2,
+                color:
+                  bmiInfo.category === 'Normal range'
+                    ? 'var(--accent-sage)'
+                    : bmiInfo.category === 'Underweight' || bmiInfo.category === 'Elevated'
+                    ? 'var(--accent-gold)'
+                    : 'var(--accent-terracotta)',
+              }}>
                 {bmiInfo.category}
               </div>
             </div>

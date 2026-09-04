@@ -1,27 +1,72 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trophy, Award, Check, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { INITIAL_COMPETE_DATA } from '../lib/competeService';
+import {
+  INITIAL_COMPETE_DATA,
+  subscribeToLeaderboard,
+  upsertLeaderboardEntry,
+} from '../lib/competeService';
+import { LeaderboardEntry } from '../types/database.types';
 
-export const Compete: React.FC = () => {
+interface CompeteProps {
+  uid: string | null;
+  displayName?: string | null;
+  avatarText?: string;
+}
+
+export const Compete: React.FC<CompeteProps> = ({ uid, displayName, avatarText }) => {
   const [data, setData] = useState(INITIAL_COMPETE_DATA);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-  const handleClaimBadge = () => {
-    if (!data.badgeClaimed) {
-      try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.7 },
-          colors: ['#D75A30', '#E5A83B', '#4E7A66'],
-        });
-      } catch (e) {}
+  useEffect(() => {
+    const unsubscribe = subscribeToLeaderboard(uid, (entries) => {
+      setLeaderboard(entries);
+      const mine = entries.find((e) => e.isCurrentUser);
+      if (mine) {
+        setData((prev) => ({
+          ...prev,
+          points: mine.points,
+          rankThisWeek: `#${mine.rank}`,
+        }));
+      }
+    });
+    return unsubscribe;
+  }, [uid]);
 
-      setData((prev) => ({
-        ...prev,
-        badgeClaimed: true,
-        points: prev.points + 50,
-      }));
+  // Make sure this user has a row in the shared leaderboard once we know who they are.
+  useEffect(() => {
+    if (!uid) return;
+    const alreadyThere = leaderboard.some((e) => e.isCurrentUser);
+    if (!alreadyThere) {
+      upsertLeaderboardEntry(uid, {
+        name: displayName || 'You',
+        initials: (avatarText || 'YOU').slice(0, 3).toUpperCase(),
+        points: data.points,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, leaderboard.length]);
+
+  const handleClaimBadge = async () => {
+    if (data.badgeClaimed) return;
+    try {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#D75A30', '#E5A83B', '#4E7A66'],
+      });
+    } catch (e) {}
+
+    const nextPoints = data.points + 50;
+    setData((prev) => ({ ...prev, badgeClaimed: true, points: nextPoints }));
+
+    if (uid) {
+      await upsertLeaderboardEntry(uid, {
+        name: displayName || 'You',
+        initials: (avatarText || 'YOU').slice(0, 3).toUpperCase(),
+        points: nextPoints,
+      });
     }
   };
 
@@ -128,13 +173,18 @@ export const Compete: React.FC = () => {
         <div className="section-label">COMMUNITY PULSE</div>
         <div className="section-header-row">
           <h2 className="section-title">Leaderboard</h2>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>• updated now</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>• live</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {data.leaderboard.map((item) => (
+          {leaderboard.length === 0 && (
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '14px 4px' }}>
+              No friends here yet — invite them to sign in and join the board.
+            </div>
+          )}
+          {leaderboard.map((item) => (
             <div
-              key={item.name}
+              key={item.name + item.rank}
               style={{
                 display: 'flex',
                 alignItems: 'center',

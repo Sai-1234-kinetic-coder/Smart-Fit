@@ -24,10 +24,12 @@ export const BrainFitness: React.FC = () => {
     if (selectedPiece) {
       // Move the piece to (row, col)
       const isForkSquare = row === puzzle.targetForkSquare.row && col === puzzle.targetForkSquare.col;
-      
-      const updatedPieces = puzzle.pieces.map((p) =>
-        p.id === selectedPiece.id ? { ...p, row, col } : p
-      );
+
+      // Remove any piece already occupying the destination square (capture),
+      // then move the selected piece there.
+      const updatedPieces = puzzle.pieces
+        .filter((p) => p.id === selectedPiece.id || p.row !== row || p.col !== col)
+        .map((p) => (p.id === selectedPiece.id ? { ...p, row, col } : p));
 
       setPuzzle((prev) => ({
         ...prev,

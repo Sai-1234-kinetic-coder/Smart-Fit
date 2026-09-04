@@ -26,7 +26,7 @@ export const INITIAL_CHESS_PUZZLE: ChessPuzzleState = {
     { id: 'wr1', type: 'R', row: 1, col: 6, color: 'white' },
     { id: 'bp1', type: 'p', row: 2, col: 5, color: 'black' },
     { id: 'bp2', type: 'p', row: 3, col: 3, color: 'black' },
-    { id: 'br1', type: 'r', row: 2, col: 5, color: 'black' },
+    { id: 'br1', type: 'r', row: 0, col: 5, color: 'black' },
     { id: 'wn1', type: 'N', row: 5, col: 4, color: 'white' },
     { id: 'wp1', type: 'P', row: 6, col: 6, color: 'white' },
     { id: 'bk1', type: 'k', row: 1, col: 3, color: 'black' },

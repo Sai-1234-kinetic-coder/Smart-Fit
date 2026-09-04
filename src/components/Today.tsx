@@ -58,7 +58,7 @@ export const Today: React.FC<TodayProps> = ({
           <span style={{ fontFamily: 'var(--font-serif)', fontSize: 56, lineHeight: 1, fontWeight: 500 }}>
             {data.auraScore}
           </span>
-          <span style={{ fontSize: 20, color: 'var(--text-muted)', fontFamily: 'var(--font-serif)' }}>/100</span>
+          <span style={{ fontSize: 20, color: 'var(--text-muted)', fontFamily: 'var(--font-serif)' }}>/{data.auraScoreMax}</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>

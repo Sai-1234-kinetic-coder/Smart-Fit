@@ -1,33 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TodayData } from '../types/database.types';
-import { getTodayData, saveTodayData, togglePracticeComplete } from '../lib/activityService';
+import {
+  INITIAL_TODAY_DATA,
+  subscribeToTodayData,
+  saveTodayData,
+  togglePracticeComplete,
+} from '../lib/activityService';
 
-export function useTodayData() {
-  const [data, setData] = useState<TodayData>(getTodayData);
+interface Options {
+  uid: string | null;
+  displayName?: string | null;
+  avatarText?: string;
+}
+
+export function useTodayData({ uid, displayName, avatarText }: Options) {
+  const [data, setData] = useState<TodayData>(INITIAL_TODAY_DATA);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setData(getTodayData());
-  }, []);
+    setIsLoading(true);
+    const unsubscribe = subscribeToTodayData(
+      uid,
+      { name: displayName, avatarText },
+      (nextData) => {
+        setData(nextData);
+        setIsLoading(false);
+      }
+    );
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid]);
 
-  const handleTogglePractice = (id: string) => {
-    const updated = togglePracticeComplete(id);
-    setData(updated);
-  };
+  const handleTogglePractice = useCallback(
+    async (id: string) => {
+      const updated = await togglePracticeComplete(uid, data, id);
+      setData(updated);
+    },
+    [uid, data]
+  );
 
-  const updateSignals = (newSignals: Partial<TodayData['signals']>) => {
-    const updated: TodayData = {
-      ...data,
-      signals: {
-        ...data.signals,
-        ...newSignals,
-      },
-    };
-    saveTodayData(updated);
-    setData(updated);
-  };
+  const updateSignals = useCallback(
+    async (newSignals: Partial<TodayData['signals']>) => {
+      const updated: TodayData = {
+        ...data,
+        signals: { ...data.signals, ...newSignals },
+      };
+      setData(updated);
+      await saveTodayData(uid, updated);
+    },
+    [uid, data]
+  );
 
   return {
     todayData: data,
+    isLoading,
     togglePractice: handleTogglePractice,
     updateSignals,
   };

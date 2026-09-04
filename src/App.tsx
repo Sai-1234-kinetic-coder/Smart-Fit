@@ -7,8 +7,11 @@ import { Wellness } from './components/Wellness';
 import { BrainFitness } from './components/BrainFitness';
 import { Compete } from './components/Compete';
 import { AskAura } from './components/AskAura';
+import { Login } from './components/Login';
 import { useTodayData } from './hooks/useTodayData';
-import { Sparkles, X } from 'lucide-react';
+import { useAuth } from './hooks/useAuth';
+import { signOutUser } from './lib/authService';
+import { Sparkles, X, LogOut } from 'lucide-react';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -16,7 +19,31 @@ export const App: React.FC = () => {
   const [isAskAuraOpen, setIsAskAuraOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const { todayData, togglePractice } = useTodayData();
+  const { user, isLoading: isAuthLoading, isOnlineMode } = useAuth();
+
+  const uid = user?.uid ?? (isOnlineMode ? null : 'local-user');
+  const avatarText = user?.displayName
+    ? user.displayName.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
+    : undefined;
+
+  const { todayData, togglePractice } = useTodayData({
+    uid,
+    displayName: user?.displayName,
+    avatarText,
+  });
+
+  // Gate the whole app behind sign-in only when Firebase is actually configured.
+  if (isOnlineMode && isAuthLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Loading AuraFit…</span>
+      </div>
+    );
+  }
+
+  if (isOnlineMode && !user) {
+    return <Login />;
+  }
 
   return (
     <div className="app-container">
@@ -49,6 +76,25 @@ export const App: React.FC = () => {
               <Sparkles size={14} color="var(--accent-terracotta)" />
               <span>Ask Aura</span>
             </button>
+
+            {isOnlineMode && user && (
+              <button
+                onClick={() => signOutUser()}
+                title="Sign out"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <LogOut size={16} />
+              </button>
+            )}
 
             <button
               onClick={() => setIsProfileOpen(true)}
@@ -93,7 +139,9 @@ export const App: React.FC = () => {
 
           {currentTab === 'brain' && <BrainFitness />}
 
-          {currentTab === 'compete' && <Compete />}
+          {currentTab === 'compete' && (
+            <Compete uid={uid} displayName={user?.displayName} avatarText={todayData.profile.avatarText} />
+          )}
         </main>
       </div>
 

@@ -25,7 +25,7 @@ export function calculateBMI(weightKg: number, heightCm: number): BMIData {
   else category = 'High';
 
   return {
-    bmi: isNaN(bmi) ? 22.4 : bmi,
+    bmi: Number.isFinite(bmi) ? bmi : 22.4,
     category,
     note: 'Aura keeps the conversation about capability, not a number.',
   };
