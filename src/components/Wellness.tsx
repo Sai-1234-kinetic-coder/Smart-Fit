@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, ChevronRight, Wind, Check, Play, Pause, Sparkles, Sun } from 'lucide-react';
+import { Heart, ChevronRight, Wind, Check, Pause, X, Utensils } from 'lucide-react';
 import { INITIAL_WELLNESS_CARRIES, MIND_MENU } from '../lib/wellnessService';
 
 interface WellnessProps {
@@ -11,11 +11,15 @@ export const Wellness: React.FC<WellnessProps> = ({ mode = 'wellness' }) => {
   const [activeMindIndex, setActiveMindIndex] = useState(1); // 'Clear the noise'
   const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'Inhale' | 'Hold' | 'Exhale' | 'Pause'>('Inhale');
-  const [breathTimer, setBreathTimer] = useState(300); // 5 min
+  const [, setBreathTimer] = useState(300); // 5 min
+  const [isMealGuideOpen, setIsMealGuideOpen] = useState(false);
 
-  const handleToggleCarry = (id: string) => {
+  const handleSelectCarry = (id: string) => {
     setCarries((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, selected: !c.selected } : c))
+      prev.map((c) => ({
+        ...c,
+        selected: c.id === id ? !c.selected : false,
+      }))
     );
   };
 
@@ -78,14 +82,14 @@ export const Wellness: React.FC<WellnessProps> = ({ mode = 'wellness' }) => {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '24px 0',
+              padding: '28px 0',
               marginBottom: 20,
               backgroundColor: 'var(--bg-card-subtle)',
               borderRadius: 'var(--radius-md)'
             }}>
               <div style={{
-                width: 100,
-                height: 100,
+                width: 110,
+                height: 110,
                 borderRadius: '50%',
                 background: 'radial-gradient(circle, #4E7A66 0%, #D75A30 100%)',
                 animation: 'breatheCircle 8s infinite ease-in-out',
@@ -94,13 +98,13 @@ export const Wellness: React.FC<WellnessProps> = ({ mode = 'wellness' }) => {
                 justifyContent: 'center',
                 color: '#FFF',
                 fontFamily: 'var(--font-serif)',
-                fontSize: 16,
-                boxShadow: '0 0 30px rgba(78, 122, 102, 0.3)'
+                fontSize: 17,
+                boxShadow: '0 0 30px rgba(78, 122, 102, 0.35)'
               }}>
                 {breathPhase}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>
-                Box cadence · 4-4-4-4
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginTop: 14 }}>
+                Cadence · 4s Inhale · 4s Hold · 4s Exhale · 4s Rest
               </div>
             </div>
           )}
@@ -111,15 +115,17 @@ export const Wellness: React.FC<WellnessProps> = ({ mode = 'wellness' }) => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              padding: '12px 22px',
+              padding: '12px 24px',
               borderRadius: 'var(--radius-full)',
               backgroundColor: isBreathingActive ? 'var(--bg-card-subtle)' : 'var(--accent-terracotta)',
               color: isBreathingActive ? 'var(--text-primary)' : '#FFFFFF',
-              fontSize: 13,
-              fontWeight: 600
+              fontSize: 14,
+              fontWeight: 600,
+              boxShadow: isBreathingActive ? 'none' : '0 4px 14px rgba(215, 90, 48, 0.25)',
+              cursor: 'pointer'
             }}
           >
-            {isBreathingActive ? <Pause size={15} /> : <Wind size={15} />}
+            {isBreathingActive ? <Pause size={16} /> : <Wind size={16} />}
             <span>{isBreathingActive ? 'Pause practice' : 'Begin guided breath'}</span>
           </button>
         </div>
@@ -192,6 +198,8 @@ export const Wellness: React.FC<WellnessProps> = ({ mode = 'wellness' }) => {
   }
 
   // Default Wellness Screen
+  const activeCarry = carries.find((c) => c.selected);
+
   return (
     <div className="content-feed fade-in">
       <div className="section-label" style={{ color: 'var(--accent-terracotta)' }}>WELLNESS</div>
@@ -247,38 +255,51 @@ export const Wellness: React.FC<WellnessProps> = ({ mode = 'wellness' }) => {
           </span>
         </div>
 
-        <button style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          fontSize: 13,
-          fontWeight: 600,
-          color: 'var(--accent-terracotta)'
-        }}>
-          Open meal guide <ChevronRight size={14} />
+        <button
+          onClick={() => setIsMealGuideOpen(true)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 14,
+            fontWeight: 600,
+            color: 'var(--accent-terracotta)',
+            padding: '6px 0',
+            cursor: 'pointer'
+          }}
+        >
+          <span>Open meal guide</span>
+          <ChevronRight size={16} />
         </button>
       </div>
 
       {/* Carry Habits Section */}
       <div style={{ marginTop: 32 }}>
         <div className="section-header-row" style={{ marginBottom: 16 }}>
-          <h2 className="section-title">Choose one to carry</h2>
-          <Heart size={16} color="#A8A29E" />
+          <div>
+            <h2 className="section-title">Choose one to carry</h2>
+            {activeCarry && (
+              <span style={{ fontSize: 12, color: 'var(--accent-sage)', fontWeight: 600 }}>
+                ✓ Selected: {activeCarry.title}
+              </span>
+            )}
+          </div>
+          <Heart size={16} color="var(--accent-terracotta)" />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {carries.map((item) => (
             <div
               key={item.id}
-              onClick={() => handleToggleCarry(item.id)}
+              onClick={() => handleSelectCarry(item.id)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '16px 18px',
-                backgroundColor: 'var(--bg-card)',
+                backgroundColor: item.selected ? 'var(--bg-card-subtle)' : 'var(--bg-card)',
                 borderRadius: 'var(--radius-md)',
-                border: item.selected ? '1px solid var(--accent-terracotta)' : '1px solid var(--border-card)',
+                border: item.selected ? '2px solid var(--accent-terracotta)' : '1px solid var(--border-card)',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
@@ -293,22 +314,103 @@ export const Wellness: React.FC<WellnessProps> = ({ mode = 'wellness' }) => {
               </div>
 
               <div style={{
-                width: 22,
-                height: 22,
+                width: 24,
+                height: 24,
                 borderRadius: '50%',
-                border: item.selected ? 'none' : '1px solid #D1CAC0',
+                border: item.selected ? 'none' : '2px solid #D1CAC0',
                 backgroundColor: item.selected ? 'var(--accent-terracotta)' : 'transparent',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#FFF'
+                color: '#FFF',
+                transition: 'all 0.15s ease'
               }}>
-                {item.selected && <Check size={14} strokeWidth={2.5} />}
+                {item.selected && <Check size={14} strokeWidth={3} />}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Meal Guide Modal Dialog */}
+      {isMealGuideOpen && (
+        <div className="modal-backdrop" onClick={() => setIsMealGuideOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Utensils size={20} color="var(--accent-terracotta)" />
+                <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 22 }}>Aura Nutrition Blueprint</h2>
+              </div>
+              <button
+                onClick={() => setIsMealGuideOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                aria-label="Close meal guide"
+              >
+                <X size={20} color="var(--text-muted)" />
+              </button>
+            </div>
+
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
+              No dogmatic calorie counting. Build meals centered on nourishment, energy stability, and digestion ease.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Protein Anchor */}
+              <div style={{ padding: '14px 16px', backgroundColor: 'var(--bg-card-subtle)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--accent-terracotta)' }}>
+                    1. THE PROTEIN ANCHOR
+                  </span>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                  25–40g per meal. Wild salmon, pasture-raised eggs, tempeh, Greek yogurt, or slow-cooked lentils. Supports recovery and keeps blood sugar smooth.
+                </div>
+              </div>
+
+              {/* Fiber Friend */}
+              <div style={{ padding: '14px 16px', backgroundColor: 'var(--bg-card-subtle)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--accent-sage)' }}>
+                    2. THE FIBER FRIEND
+                  </span>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                  8–12g per plate. Roasted broccoli, dark leafy greens, chia seeds, berries, or prebiotic whole oats for gut microbiome vitality.
+                </div>
+              </div>
+
+              {/* Colorful Phytonutrients */}
+              <div style={{ padding: '14px 16px', backgroundColor: 'var(--bg-card-subtle)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--accent-gold)' }}>
+                    3. COLORFUL COMPASS
+                  </span>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                  At least 2 deep colors per dish: purple cabbage, heirloom carrots, avocado, cold-pressed olive oil, or citrus zest for micronutrient density.
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsMealGuideOpen(false)}
+              style={{
+                marginTop: 22,
+                width: '100%',
+                padding: '12px 18px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--accent-terracotta)',
+                color: '#FFFFFF',
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: 'pointer'
+              }}
+            >
+              Got it, thanks!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

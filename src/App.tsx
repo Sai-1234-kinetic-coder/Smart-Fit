@@ -4,6 +4,7 @@ import { Today } from './components/Today';
 import { Trainer } from './components/Trainer';
 import { Tools } from './components/Tools';
 import { Wellness } from './components/Wellness';
+import { Mind } from './components/Mind';
 import { BrainFitness } from './components/BrainFitness';
 import { Compete } from './components/Compete';
 import { AskAura } from './components/AskAura';
@@ -73,6 +74,7 @@ export const App: React.FC = () => {
             <button
               className="ask-aura-top-btn"
               onClick={() => setIsAskAuraOpen(true)}
+              aria-label="Ask Aura"
             >
               <Sparkles size={14} color="var(--accent-terracotta)" />
               <span>Ask Aura</span>
@@ -99,6 +101,7 @@ export const App: React.FC = () => {
 
             <button
               onClick={() => setIsProfileOpen(true)}
+              aria-label="Open Profile"
               style={{
                 width: 32,
                 height: 32,
@@ -135,6 +138,8 @@ export const App: React.FC = () => {
 
           {currentTab === 'wellness' && <Wellness />}
 
+          {currentTab === 'mind' && <Mind />}
+
           {currentTab === 'brain' && <BrainFitness />}
 
           {currentTab === 'compete' && (
@@ -145,19 +150,27 @@ export const App: React.FC = () => {
 
       {/* Persistent / Modal Drawers */}
       {isAskAuraOpen && (
-        <AskAura
-          isDrawer
-          onClose={() => setIsAskAuraOpen(false)}
-        />
+        <div className="drawer-backdrop" onClick={() => setIsAskAuraOpen(false)}>
+          <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
+            <AskAura
+              isDrawer
+              onClose={() => setIsAskAuraOpen(false)}
+            />
+          </div>
+        </div>
       )}
 
       {/* Simple Profile Drawer */}
       {isProfileOpen && (
-        <div className="profile-backdrop" onClick={() => setIsProfileOpen(false)}>
-          <div className="profile-drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="drawer-backdrop" onClick={() => setIsProfileOpen(false)}>
+          <div className="drawer-panel profile-drawer" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 22 }}>Your Aura Profile</h2>
-              <button onClick={() => setIsProfileOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button
+                onClick={() => setIsProfileOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                aria-label="Close profile"
+              >
                 <X size={20} color="var(--text-muted)" />
               </button>
             </div>
@@ -193,6 +206,35 @@ export const App: React.FC = () => {
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)' }}>CURRENT STREAK</div>
                 <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>12 Consecutive Days</div>
               </div>
+
+              <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card-subtle)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)' }}>AI ASSISTANT</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>Gemini Flash-Lite Connected</div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  setIsAskAuraOpen(true);
+                }}
+                style={{
+                  marginTop: 8,
+                  padding: '12px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--accent-terracotta)',
+                  color: '#FFFFFF',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 14px rgba(215, 90, 48, 0.25)'
+                }}
+              >
+                <Sparkles size={16} />
+                <span>Open Aura Companion</span>
+              </button>
             </div>
           </div>
         </div>
