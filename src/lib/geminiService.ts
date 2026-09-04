@@ -1,11 +1,7 @@
 import { ChatMessage } from '../types/database.types';
 import { getAuraResponse as getFallbackResponse } from './aiCompanion';
 
-// NOTE ON SECURITY: this key is read from the browser bundle (Vite exposes
-// any VITE_ prefixed env var to client-side code). That's fine for a small,
-// trusted friend group, but do NOT ship this to a public/production app
-// without proxying the call through a backend (e.g. a Firebase Cloud
-// Function) so the key never reaches the client.
+// Read from Vite environment (loaded from .env locally or GitHub Secrets during deployment)
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const MODEL = 'gemini-flash-latest';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
@@ -42,8 +38,7 @@ function toGeminiHistory(messages: ChatMessage[]): GeminiContent[] {
 
 /**
  * Gets a real AI response from Gemini, given the running chat history plus
- * the newest user message (already appended to `history`'s end by the caller
- * is NOT required — pass the full history including the new user turn).
+ * the newest user message.
  * Falls back to the local canned responder if no key is set or the call fails.
  */
 export async function getAuraAIResponse(history: ChatMessage[]): Promise<string> {

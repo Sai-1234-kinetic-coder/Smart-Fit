@@ -24,7 +24,7 @@ export const BrainFitness: React.FC = () => {
     if (selectedPiece) {
       // Move the piece to (row, col)
       const isForkSquare = row === puzzle.targetForkSquare.row && col === puzzle.targetForkSquare.col;
-
+      
       // Remove any piece already occupying the destination square (capture),
       // then move the selected piece there.
       const updatedPieces = puzzle.pieces
@@ -37,7 +37,7 @@ export const BrainFitness: React.FC = () => {
       }));
 
       setSelectedPiece(null);
-      setMoveStatus('Move noted');
+      setMoveStatus(isForkSquare ? 'Fork spotted! +25 focus' : 'Move noted');
     }
   };
 

@@ -18,10 +18,11 @@ export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<TabId>('today');
   const [isAskAuraOpen, setIsAskAuraOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   const { user, isLoading: isAuthLoading, isOnlineMode } = useAuth();
 
-  const uid = user?.uid ?? (isOnlineMode ? null : 'local-user');
+  const uid = user?.uid ?? (isOnlineMode && !isGuest ? null : 'local-user');
   const avatarText = user?.displayName
     ? user.displayName.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
     : undefined;
@@ -41,8 +42,8 @@ export const App: React.FC = () => {
     );
   }
 
-  if (isOnlineMode && !user) {
-    return <Login />;
+  if (isOnlineMode && !user && !isGuest) {
+    return <Login onContinueAsGuest={() => setIsGuest(true)} />;
   }
 
   return (
@@ -102,13 +103,14 @@ export const App: React.FC = () => {
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                backgroundColor: '#E6E1D7',
-                color: '#59534C',
-                fontSize: 12,
+                backgroundColor: 'var(--accent-terracotta)',
+                color: '#FFFFFF',
+                fontSize: 11,
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                cursor: 'pointer'
               }}
             >
               {todayData.profile.avatarText}
@@ -116,16 +118,14 @@ export const App: React.FC = () => {
           </div>
         </header>
 
-        {/* Tab View Routers */}
-        <main>
+        {/* Tab Content Rendering */}
+        <main className="main-content">
           {currentTab === 'today' && (
             <Today
               data={todayData}
               onTogglePractice={togglePractice}
-              onNavigateTab={(t) => setCurrentTab(t)}
+              onNavigateTab={(tab) => setCurrentTab(tab)}
               onOpenProfile={() => setIsProfileOpen(true)}
-              showProfileModal={isProfileOpen}
-              onCloseProfileModal={() => setIsProfileOpen(false)}
             />
           )}
 
@@ -133,9 +133,7 @@ export const App: React.FC = () => {
 
           {currentTab === 'tools' && <Tools />}
 
-          {currentTab === 'wellness' && <Wellness mode="wellness" />}
-
-          {currentTab === 'mind' && <Wellness mode="mind" />}
+          {currentTab === 'wellness' && <Wellness />}
 
           {currentTab === 'brain' && <BrainFitness />}
 
@@ -145,34 +143,57 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Ask Aura Slide-out Overlay Drawer */}
+      {/* Persistent / Modal Drawers */}
       {isAskAuraOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            zIndex: 150,
-          }}
-          onClick={() => setIsAskAuraOpen(false)}
-        >
-          <div
-            className="fade-in"
-            style={{
-              width: '100%',
-              maxWidth: 580,
-              height: '100vh',
-              backgroundColor: 'var(--bg-canvas)',
-              overflowY: 'auto',
-              boxShadow: '-10px 0 40px rgba(0,0,0,0.1)',
-              padding: '24px',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <AskAura isDrawer onClose={() => setIsAskAuraOpen(false)} />
+        <AskAura
+          isDrawer
+          onClose={() => setIsAskAuraOpen(false)}
+        />
+      )}
+
+      {/* Simple Profile Drawer */}
+      {isProfileOpen && (
+        <div className="profile-backdrop" onClick={() => setIsProfileOpen(false)}>
+          <div className="profile-drawer" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 22 }}>Your Aura Profile</h2>
+              <button onClick={() => setIsProfileOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={20} color="var(--text-muted)" />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+              <div style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                backgroundColor: 'var(--accent-terracotta)',
+                color: '#FFFFFF',
+                fontSize: 18,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {todayData.profile.avatarText}
+              </div>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 600 }}>{todayData.profile.name}</h3>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Member since {todayData.profile.memberSince}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card-subtle)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)' }}>MEMBER STATUS</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>Level {todayData.profile.level} · Consistent Practitioner</div>
+              </div>
+
+              <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card-subtle)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)' }}>CURRENT STREAK</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>12 Consecutive Days</div>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -3,7 +3,11 @@ import { Sparkles } from 'lucide-react';
 import { signInWithGoogle } from '../lib/authService';
 import { isOnlineMode } from '../lib/firebase';
 
-export const Login: React.FC = () => {
+interface LoginProps {
+  onContinueAsGuest?: () => void;
+}
+
+export const Login: React.FC<LoginProps> = ({ onContinueAsGuest }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
@@ -79,25 +83,46 @@ export const Login: React.FC = () => {
         </div>
       )}
 
-      <button
-        onClick={handleSignIn}
-        disabled={!isOnlineMode || isSigningIn}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '14px 28px',
-          borderRadius: 'var(--radius-full)',
-          backgroundColor: isOnlineMode ? 'var(--accent-terracotta)' : 'var(--bg-card-subtle)',
-          color: isOnlineMode ? '#FFFFFF' : 'var(--text-muted)',
-          fontSize: 15,
-          fontWeight: 600,
-          cursor: isOnlineMode ? 'pointer' : 'not-allowed',
-          opacity: isSigningIn ? 0.7 : 1,
-        }}
-      >
-        {isSigningIn ? 'Signing in…' : 'Continue with Google'}
-      </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+        <button
+          onClick={handleSignIn}
+          disabled={!isOnlineMode || isSigningIn}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '14px 28px',
+            borderRadius: 'var(--radius-full)',
+            backgroundColor: isOnlineMode ? 'var(--accent-terracotta)' : 'var(--bg-card-subtle)',
+            color: isOnlineMode ? '#FFFFFF' : 'var(--text-muted)',
+            fontSize: 15,
+            fontWeight: 600,
+            cursor: isOnlineMode ? 'pointer' : 'not-allowed',
+            opacity: isSigningIn ? 0.7 : 1,
+            border: 'none',
+          }}
+        >
+          {isSigningIn ? 'Signing in…' : 'Continue with Google'}
+        </button>
+
+        {onContinueAsGuest && (
+          <button
+            onClick={onContinueAsGuest}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: 'pointer',
+              padding: '6px 12px',
+              textDecoration: 'underline',
+            }}
+          >
+            Or explore as Guest (offline mode)
+          </button>
+        )}
+      </div>
     </div>
   );
 };
